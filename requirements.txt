@@ -3,4 +3,8 @@ celery~=5.2.7
 psycopg-binary~=3.1.8
 psycopg2~=2.9.5
 redis~=4.4.2
+GitPython~=3.1.30
+docker~=6.0.1
+ansible~=7.2.0
+scp~=0.14.5
 

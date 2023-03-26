@@ -185,3 +185,4 @@ fabric.properties
 .idea
 
 docker-compose.utils.yaml
+config/
