@@ -8,7 +8,7 @@ from pathlib import Path
 from docker.models.images import Image
 from yaml import SafeDumper
 
-from core.settings import settings
+from src.core.settings import settings
 
 logger = logging.getLogger()
 

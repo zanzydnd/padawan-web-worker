@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import List
 from uuid import uuid4
 
+import requests
+
 from src.accessors.ansible_accessor import AnsibleAccessor
 from src.accessors.docker_accessor import DockerAccessor
 from src.accessors.git_accessor import GitAccessor
@@ -92,5 +94,6 @@ def test_api_submission(submission_id: int, scenarios: List[dict], git_url: str)
         scenarios=scenarios
     )
     test_runner.run()
-    test_runner.create_result_data()
     clean_up(git_accessor, docker_bridge, remote_accessor, ansible_accessor, ident)
+
+    requests.post("http://127.0.0.1:8000/api/v1/submission_result/", json=test_runner.create_result_data(submission_id))

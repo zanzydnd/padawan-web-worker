@@ -25,6 +25,11 @@ class TestRunner:
             self.scenario_runners.append(scenario_runner)
             scenario_runner.run()
 
-    def create_result_data(self):
-        for sc_runner in self.scenario_runners:
-            print(sc_runner.return_data)
+    def create_result_data(self, submission_id):
+        return {
+            "submission_id": submission_id,
+            "scenarios": {
+                scenario_runner.scenario_dict.get("id"): scenario_runner.return_data
+                for scenario_runner in self.scenario_runners
+            }
+        }

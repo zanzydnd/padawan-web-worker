@@ -1,0 +1,2 @@
+class ValidatorWentWrongException(Exception):
+    pass

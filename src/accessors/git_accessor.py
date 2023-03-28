@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 
 from git import Repo
@@ -13,4 +14,5 @@ class GitAccessor:
 
     def delete_local_repository(self, dir_name: str):
         logger.info("Removing repo")
-        shutil.rmtree(dir_name)
+        shutil.rmtree(dir_name, ignore_errors=True)
+
