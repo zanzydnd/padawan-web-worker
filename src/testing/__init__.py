@@ -45,17 +45,24 @@ class ScenarioRunner:
     def _process_validator(self, response: requests.Response, test: dict, duration: datetime.timedelta):
         self.return_data[test.get("name")] = []
         print(self.return_data[test.get("name")])
+
+        logger.warning(response.text)
+        logger.warning(response.status_code)
+        logger.warning(response.headers)
+
         for validator in test.get("validators"):
             for key in validator.keys():
                 if key == "allowed_response_statuses" and validator.get(key):
                     if response.status_code not in validator.get(key):
                         self.return_data[test.get("name")].append(
                             {
+                                "id": validator.get("id"),
                                 "validator": "allowed_response_statuses",
                                 "status": response.status_code,
                                 "headers": dict(response.headers),
                                 "body": response.json() if response.text else "Нет тела.",
                                 "message": f"Недопустимый статус ответа. Статус: {response.status_code}. Допустимые: {validator.get(key)}",
+                                "success": False
                             }
                         )
                         raise ValidatorWentWrongException()
@@ -64,11 +71,13 @@ class ScenarioRunner:
                     if response.json() != json.loads(rendered_expected):
                         self.return_data[test.get("name")].append(
                             {
+                                "id": validator.get("id"),
                                 "validator": "expected_response_body",
                                 "status": response.status_code,
                                 "headers": dict(response.headers),
                                 "body": response.json() if response.text else "Нет тела.",
                                 "message": f"Несовпадение. Вернувшийся результат: {response.json()}. Ожидаемый: {json.loads(rendered_expected)}",
+                                "success": False
                             }
                         )
                         raise ValidatorWentWrongException()
@@ -76,14 +85,25 @@ class ScenarioRunner:
                     if duration.seconds > validator.get(key):
                         self.return_data[test.get("name")].append(
                             {
+                                "id": validator.get("id"),
                                 "validator": "timeout",
                                 "status": response.status_code,
                                 "headers": dict(response.headers),
                                 "body": response.json() if response.text else "Нет тела.",
                                 "message": f"Timeout. Ваше время: {duration.seconds}c. Ожидаемое время: {validator.get(key)}с.",
+                                "success": False
                             }
                         )
                         raise ValidatorWentWrongException()
+            self.return_data[test.get("name")].append(
+                {
+                    "id": validator.get("id"),
+                    "success": True,
+                    "body": response.json() if response.text else "Нет тела.",
+                    "status": response.status_code,
+                    "headers": dict(response.headers),
+                }
+            )
 
     def process_response(self, response: requests.Response, test: dict,
                          duration: datetime.timedelta = datetime.timedelta(seconds=0)):
@@ -91,13 +111,12 @@ class ScenarioRunner:
             "Response": response.json() if response.text else {},
             "Headers": response.headers,
         }
-        self._process_validator(response,test,duration)
+        self._process_validator(response, test, duration)
 
     def run(self):
         logger.info(f"Running scenario: {self.scenario_dict}")
         session = requests.Session()
         for i, test_dict in enumerate(self.scenario_dict.get("tests")):
-            print(test_dict.get("name"))
             request_obj = Request(
                 method=test_dict.get("method"),
                 url=self.make_request_url(test_dict.get("url")),
@@ -113,6 +132,7 @@ class ScenarioRunner:
             try:
                 self.process_response(response, test_dict, end_time - start_time)
             except ValidatorWentWrongException as v_w_e:
+                logger.info("test went wrong")
                 for j in range(i + 1, len(self.scenario_dict.get("tests"))):
                     self.return_data[self.scenario_dict.get("tests")[j].get("name")] = "-"
                 return
