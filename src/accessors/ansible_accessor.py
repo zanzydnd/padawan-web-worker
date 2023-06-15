@@ -99,72 +99,72 @@ class AnsibleAccessor:
 
         shutil.rmtree(C.DEFAULT_LOCAL_TMP, True)
 
-    def start_docker_compose(self, compose_dir):
-        # TODO: переписать на ansible
-        p = subprocess.Popen(["docker-compose", "up", "-d"], cwd=compose_dir)
-        p.wait()
-
-    def down_docker_compose(self, compose_dir):
-        # TODO: переписать на ansible
-        p = subprocess.Popen(["docker-compose", "down"], cwd=compose_dir)
-        p.wait()
     # def start_docker_compose(self, compose_dir):
-    #     logger.info(f"Starting compose file. compose_dir:{compose_dir}")
-    #     play_source = dict(
-    #         name="Deploy service Play",
-    #         hosts=settings.HOST_LIST,
-    #         gather_facts='yes',
-    #         tasks=[
-    #             dict(
-    #                 name="Starting compose",
-    #                 action=dict(
-    #                     module='community.docker.docker_compose',
-    #                     project_src=compose_dir,
-    #                 ),
-    #                 register='shell_out',
-    #             ),
-    #         ]
-    #     )
-    #     # play_source = dict(
-    #     #     name="Ansible Play",
-    #     #     hosts=settings.HOST_LIST,
-    #     #     gather_facts='no',
-    #     #     tasks=[
-    #     #         dict(action=dict(module='shell', args='ls'), register='shell_out'),
-    #     #         dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}'))),
-    #     #         dict(action=dict(module='command', args=dict(cmd='/usr/bin/uptime'))),
-    #     #     ]
-    #     # )
-    #     self.run_play(play_source)
+    #     # TODO: переписать на ansible
+    #     p = subprocess.Popen(["docker-compose", "up", "-d"], cwd=compose_dir)
+    #     p.wait()
     #
     # def down_docker_compose(self, compose_dir):
-    #     logger.info("Downing compose file")
-    #     play_source = dict(
-    #         name="Stop service Play",
-    #         hosts=settings.HOST_LIST,
-    #         gather_facts='yes',
-    #         tasks=[
-    #             dict(
-    #                 name="Stopping compose",
-    #                 action=dict(
-    #                     module='community.docker.docker_compose',
-    #                     project_src=compose_dir,
-    #                     build="false",
-    #                     stopped="true",
-    #                 ),
-    #                 register='shell_out',
-    #             ),
-    #             dict(
-    #                 name="Deleting compose",
-    #                 action=dict(
-    #                     module='community.docker.docker_compose',
-    #                     project_src=compose_dir,
-    #                     build="false",
-    #                     remove_images="all",
-    #                     remove_orphans="true",
-    #                 ),
-    #                 register='shell_out',
-    #             ),
-    #         ]
-    #     )
-    #     self.run_play(play_source)
+    #     # TODO: переписать на ansible
+    #     p = subprocess.Popen(["docker-compose", "down"], cwd=compose_dir)
+    #     p.wait()
+    def start_docker_compose(self, compose_dir):
+        logger.info(f"Starting compose file. compose_dir:{compose_dir}")
+        play_source = dict(
+            name="Deploy service Play",
+            hosts=settings.HOST_LIST,
+            gather_facts='yes',
+            tasks=[
+                dict(
+                    name="Starting compose",
+                    action=dict(
+                        module='community.docker.docker_compose',
+                        project_src=compose_dir,
+                    ),
+                    register='shell_out',
+                ),
+            ]
+        )
+        # play_source = dict(
+        #     name="Ansible Play",
+        #     hosts=settings.HOST_LIST,
+        #     gather_facts='no',
+        #     tasks=[
+        #         dict(action=dict(module='shell', args='ls'), register='shell_out'),
+        #         dict(action=dict(module='debug', args=dict(msg='{{shell_out.stdout}}'))),
+        #         dict(action=dict(module='command', args=dict(cmd='/usr/bin/uptime'))),
+        #     ]
+        # )
+        self.run_play(play_source)
+
+    def down_docker_compose(self, compose_dir):
+        logger.info("Downing compose file")
+        play_source = dict(
+            name="Stop service Play",
+            hosts=settings.HOST_LIST,
+            gather_facts='yes',
+            tasks=[
+                dict(
+                    name="Stopping compose",
+                    action=dict(
+                        module='community.docker.docker_compose',
+                        project_src=compose_dir,
+                        build="false",
+                        stopped="true",
+                    ),
+                    register='shell_out',
+                ),
+                dict(
+                    name="Deleting compose",
+                    action=dict(
+                        module='community.docker.docker_compose',
+                        project_src=compose_dir,
+                        build="false",
+                        remove_images="all",
+                        remove_orphans="true",
+                    ),
+                    register='shell_out',
+                ),
+            ]
+        )
+        self.run_play(play_source)
