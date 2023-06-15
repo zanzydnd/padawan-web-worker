@@ -1,5 +1,4 @@
 import logging
-import os
 import shutil
 
 from git import Repo

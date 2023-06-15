@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple, Optional
 
 import yaml
 import docker
@@ -15,6 +16,8 @@ logger = logging.getLogger()
 
 class DockerAccessor:
     def __init__(self):
+        self.success = True
+        self.message = ''
         self.client = docker.DockerClient(
             base_url='unix:///var/run/docker.sock'
         )
@@ -54,13 +57,16 @@ class DockerAccessor:
         )
         return yaml.safe_dump(docker_compose_dict, encoding="utf-8", allow_unicode=True)
 
-    def build_image(self, identifier: str, repo_path: Path) -> Image:
+    def build_image(self, identifier: str, repo_path: Path) -> Tuple[bool, str, Optional[Image]]:
         logger.info("building image")
-        return self.client.images.build(
-            path=str(repo_path.absolute()), gzip=False, tag=identifier
-        )[0]
+        try:
+            return True, 'ok', self.client.images.build(
+                path=str(repo_path.absolute()), gzip=False, tag=identifier
+            )[0]
+        except docker.errors.BuildError as e:
+            return False, 'Ошибка при build-e докер образа.', None
 
-    def push_image(self,identifier:str):
+    def push_image(self, identifier: str):
         logger.info("pushing image")
         for line in self.client.images.push('dane4kq/testing_padawan', tag=identifier, stream=True, decode=True):
             print(line)

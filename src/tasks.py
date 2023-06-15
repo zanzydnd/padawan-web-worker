@@ -13,6 +13,7 @@ from src.accessors.git_accessor import GitAccessor
 from src.accessors.remote_accessor import RemoteAccessor
 from src.celery_farmer import celery_app
 from src.testing.runner import TestRunner
+from utils import set_all_steps_failed_with_message
 
 logger = logging.getLogger()
 
@@ -26,10 +27,13 @@ def prepare(git_url: str, ident: str):
     logger.info("pulled repository")
     docker_bridge = DockerAccessor()
 
-    docker_bridge.build_image(
+    success, message, image = docker_bridge.build_image(
         f"dane4kq/testing_padawan:{ident}",
         repo_path=Path(f"./{ident}")
     )
+    if not success:
+        docker_bridge.success = success
+        docker_bridge.message = message
     logger.info("built image")
     docker_bridge.push_image(ident)
     logger.info("pushed image")
@@ -89,6 +93,18 @@ def test_api_submission(submission_id: int, scenarios: List[dict], git_url: str)
 
     git_accessor, docker_bridge, remote_accessor, ansible_accessor = prepare(git_url, ident)
     time.sleep(10)
+
+    if not docker_bridge.success:
+        requests.post(
+            "http://127.0.0.1:8000/api/v1/submission_result/",
+            json=set_all_steps_failed_with_message(
+                submission_id=submission_id,
+                message=docker_bridge.message,
+                scenarios=scenarios
+            )
+        )
+        return
+
     test_runner = TestRunner(
         submission_id=submission_id,
         scenarios=scenarios
